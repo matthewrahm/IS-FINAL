@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
     <style>
-        /* Styling for the page */
+        /* Page styling */
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -19,19 +19,12 @@
         }
 
         h1 {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 10px;
         }
 
         #gameCanvas {
-            border: 2px solid #fff;
-            background-color: #000;
+            border: 2px solid white;
+            background-color: black;
         }
 
         .score {
@@ -39,12 +32,7 @@
             margin-top: 10px;
         }
 
-        .instructions {
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        /* Return button styling */
+        /* Return to Main Page Button */
         .return-button {
             position: fixed;
             top: 10px;
@@ -55,8 +43,7 @@
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease-in-out;
+            transition: background-color 0.3s;
         }
 
         .return-button:hover {
@@ -68,41 +55,36 @@
     <!-- Return to Main Page Button -->
     <a href="index.html" class="return-button">Return to Main Page</a>
 
-    <div class="game-container">
-        <h1>Snake Game</h1>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div class="score">Score: <span id="score">0</span></div>
-        <div class="instructions">
-            Use the arrow keys to control the snake. Avoid the walls and your own tail!
-        </div>
-    </div>
+    <!-- Snake Game -->
+    <h1>Snake Game</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="score">Score: <span id="score">0</span></div>
 
     <script>
-        // Game Variables
+        // Game variables
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        const gridSize = 20; // Size of each grid cell
-        const canvasSize = 400; // Canvas dimensions (400x400)
+        const gridSize = 20; // Size of each grid square
+        const canvasSize = 400;
         const rows = canvasSize / gridSize;
         const cols = canvasSize / gridSize;
 
-        let snake = [{ x: 10, y: 10 }]; // Starting position of snake
-        let food = { x: 15, y: 15 };   // Initial food position
-        let direction = null; // No direction at the start
-        let nextDirection = null;
+        let snake = [{ x: 5, y: 5 }]; // Snake starting position
+        let food = { x: 10, y: 10 }; // Food position
+        let direction = { x: 1, y: 0 }; // Initial direction (moving right)
         let score = 0;
         let gameInterval;
 
-        // Draw the snake
+        // Draw snake
         function drawSnake() {
             ctx.fillStyle = "lime";
-            snake.forEach(part => {
+            snake.forEach((part) => {
                 ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
             });
         }
 
-        // Draw the food
+        // Draw food
         function drawFood() {
             ctx.fillStyle = "red";
             ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
@@ -110,89 +92,93 @@
 
         // Move the snake
         function moveSnake() {
-            if (!direction) return;
-
-            if (nextDirection) direction = nextDirection;
-
             const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
 
+            // Check for collisions
             if (head.x < 0 || head.y < 0 || head.x >= cols || head.y >= rows) {
                 endGame();
                 return;
             }
 
-            for (let i = 0; i < snake.length; i++) {
+            for (let i = 1; i < snake.length; i++) {
                 if (snake[i].x === head.x && snake[i].y === head.y) {
                     endGame();
                     return;
                 }
             }
 
+            // Add new head
             snake.unshift(head);
 
+            // Check if food is eaten
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 document.getElementById("score").innerText = score;
                 placeFood();
             } else {
-                snake.pop();
+                snake.pop(); // Remove tail to keep snake length constant
             }
         }
 
+        // Place food at random position
         function placeFood() {
             food = {
                 x: Math.floor(Math.random() * cols),
                 y: Math.floor(Math.random() * rows)
             };
 
-            for (let i = 0; i < snake.length; i++) {
-                if (snake[i].x === food.x && snake[i].y === food.y) {
+            // Ensure food doesn't spawn on the snake
+            snake.forEach((part) => {
+                if (part.x === food.x && part.y === food.y) {
                     placeFood();
-                    return;
                 }
-            }
+            });
         }
 
+        // End game
         function endGame() {
             clearInterval(gameInterval);
             alert(`Game Over! Your Score: ${score}`);
             resetGame();
         }
 
+        // Reset the game
         function resetGame() {
-            snake = [{ x: 10, y: 10 }];
-            direction = null;
-            nextDirection = null;
+            snake = [{ x: 5, y: 5 }];
+            direction = { x: 1, y: 0 }; // Moving right initially
             score = 0;
             document.getElementById("score").innerText = score;
             placeFood();
             gameInterval = setInterval(gameLoop, 100);
         }
 
+        // Main game loop
         function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawFood();
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
             moveSnake();
+            drawFood();
             drawSnake();
         }
 
+        // Handle arrow key input
         window.addEventListener("keydown", (e) => {
             switch (e.key) {
                 case "ArrowUp":
-                    if (direction?.y === 0) nextDirection = { x: 0, y: -1 };
+                    if (direction.y === 0) direction = { x: 0, y: -1 };
                     break;
                 case "ArrowDown":
-                    if (direction?.y === 0) nextDirection = { x: 0, y: 1 };
+                    if (direction.y === 0) direction = { x: 0, y: 1 };
                     break;
                 case "ArrowLeft":
-                    if (direction?.x === 0) nextDirection = { x: -1, y: 0 };
+                    if (direction.x === 0) direction = { x: -1, y: 0 };
                     break;
                 case "ArrowRight":
-                    if (direction?.x === 0) nextDirection = { x: 1, y: 0 };
+                    if (direction.x === 0) direction = { x: 1, y: 0 };
                     break;
             }
         });
 
+        // Start the game
         resetGame();
     </script>
 </body>
